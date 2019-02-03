@@ -1,19 +1,25 @@
 module.exports = (RED) => {
   const discordBotManager = require('./lib/discordBotManager.js');
-  
-  function discordSendMessage(config) {
+  const { RichEmbed } = require('discord.js')
+
+  function discordSendEmbed(config) {
     RED.nodes.createNode(this, config);
     const node = this;
     const configNode = RED.nodes.getNode(config.token);
     discordBotManager.getBot(configNode).then((bot) => {
       node.on('input', (msg) => {
         const channel = config.channel || msg.channel;
+        const embed = {
+          ...msg.embed,
+          color: 0xff0000
+        };
+        const embedObj = new RichEmbed(embed)
         if (channel && typeof channel !== 'string') channel = channel.hasOwnProperty('id') ? channel.id : undefined
         if (!!channel) {
           const channelInstance = bot.channels.get(channel);
           if (channelInstance) {
             channelInstance
-              .send(msg.payload)
+              .send(embedObj)
               .then(() => {
                 node.status({ fill: "green", shape: "dot", text: "message sent" });
               })
@@ -32,5 +38,5 @@ module.exports = (RED) => {
       });
     });
   }
-  RED.nodes.registerType("discordSendMessage", discordSendMessage);
+  RED.nodes.registerType("discordSendEmbed", discordSendEmbed);
 };
